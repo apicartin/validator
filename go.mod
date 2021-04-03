@@ -1,4 +1,4 @@
-module github.com/apicart/validator
+module github.com/apicartin/validator
 
 go 1.13
 
