@@ -13,6 +13,7 @@ type Validate struct {
 	pgValidate *pgValidator.Validate
 	pgTrans    ut.Translator
 }
+
 type ValidationError struct {
 	Field   string      `json:"field"`
 	Tag     string      `json:"tag"`
@@ -29,7 +30,7 @@ func (v Validate) init() {
 	en_translations.RegisterDefaultTranslations(v.pgValidate, trans)
 	v.pgTrans = trans
 }
-func (v Validate) Validate(val interface{}) {
+func (v Validate) Validate(val interface{}) []ValidationError {
 
 	if v.pgValidate == nil {
 		v.init()
@@ -44,18 +45,17 @@ func (v Validate) Validate(val interface{}) {
 		// value most including myself do not usually have code like this.
 		if _, ok := err.(*pgValidator.InvalidValidationError); ok {
 			fmt.Println(err)
-			return
+			return errors
+		} else {
+			for _, err := range err.(pgValidator.ValidationErrors) {
+				errors = append(errors, ValidationError{
+					Field:   err.Field(),
+					Tag:     err.Tag(),
+					Value:   err.Value(),
+					Message: err.Translate(v.pgTrans),
+				})
+			}
 		}
-
-		for _, err := range err.(pgValidator.ValidationErrors) {
-			errors = append(errors, ValidationError{
-				Field:   err.Field(),
-				Tag:     err.Tag(),
-				Value:   err.Value(),
-				Message: err.Translate(v.pgTrans),
-			})
-		}
-
-		return
 	}
+	return errors
 }
