@@ -2,7 +2,6 @@ package validator
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -22,24 +21,19 @@ type ValidationError struct {
 	Message string      `json:"message"`
 }
 
-func (v Validate) init() {
-	v.pgValidate = pgValidator.New()
+func New() Validate {
+	v := Validate{
+		pgValidate: pgValidator.New(),
+	}
 	var uni *ut.UniversalTranslator
 	en := en.New()
 	uni = ut.New(en, en)
 	trans, _ := uni.GetTranslator("en")
 	en_translations.RegisterDefaultTranslations(v.pgValidate, trans)
 	v.pgTrans = trans
-	log.Println(v)
+	return v
 }
 func (v Validate) Validate(val interface{}) []ValidationError {
-
-	if v.pgValidate == nil {
-		log.Println("initializing.... ")
-		v.init()
-	}
-	log.Println("initialized....")
-	log.Println(v)
 
 	errors := []ValidationError{}
 	err := v.pgValidate.Struct(val)
